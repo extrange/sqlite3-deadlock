@@ -1,8 +1,9 @@
-# sqlite3 deadlock test
+# SQLite, Streamlit and Deadlock
 
-Streamlit uses [Tornado], a single-threaded web server to serve pages.
+[Live demo](https://sqlite-deadlock.nicholaslyz.com)
 
-Establish that streamlit spins up new threads for new connections
-recursive cursor error
+Open in a VSCode devcontainer, and then run with:
 
-[Tornado]: https://discuss.streamlit.io/t/does-streamlit-is-running-on-a-single-threaded-development-server-by-default-or-not/9898/2
+```
+streamlit run Home.py
+```

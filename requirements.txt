@@ -1,5 +1,1 @@
 streamlit
-boto3
-langchain
-bcrypt
-msal-streamlit-authentication

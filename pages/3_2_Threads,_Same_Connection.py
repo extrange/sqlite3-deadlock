@@ -11,7 +11,7 @@ st.title("2 Threads Using the Same Connection")
 
 st.write(
     """
-    In this example, we have 2 threads using the **same connection**, which obtain read-level (`SHARED`) locks, and then attempt to write simultaneously.
+    In this example, we have 2 threads using the **same connection**, which obtain read-level (`SHARED`) locks (via `BEGIN` and `SELECT`), and then attempt to write simultaneously.
 
     In this example, we get the error `cannot start a transaction within a transaction`.
 
@@ -19,7 +19,9 @@ st.write(
 
     > In serialized mode, API calls to affect or use any SQLite database connection or any object derived from such a database connection can be made safely from multiple threads. **The effect on an individual object is the same as if the API calls had all been made in the same order from a single thread.** The name "serialized" arises from the fact that SQLite uses mutexes to serialize access to each object.
 
-    Prepare the database:
+    In effect, what we have done is call `BEGIN` twice in the same transaction, which is not allowed.
+
+    We start by preparing the database:
     """
 )
 
@@ -66,7 +68,7 @@ with st.echo():
     add_script_run_ctx(thread1)
     add_script_run_ctx(thread2)
 
-st.write("Run:")
+st.write("As we expect, on running the code above we encounter an error:")
 
 with st.echo():
 
@@ -77,3 +79,5 @@ with st.echo():
 
     result = shared_conn.cursor().execute("SELECT * FROM users;").fetchall()
     st.write(result)
+
+st.page_link("pages/4_Shared _lock,_write_attempt.py", label="Next: Shared lock, write attempt", icon=":material/arrow_forward:")

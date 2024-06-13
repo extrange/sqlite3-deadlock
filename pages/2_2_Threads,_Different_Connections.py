@@ -11,6 +11,8 @@ st.title("2 Threads Using Different Connections")
 
 st.write(
     """
+    _This page sometimes errors out - if it does, just reload_
+    
     In this example, we have 2 threads which both initiate a read transaction, obtaining `SHARED` locks on the database. Then, they both attempt to write (obtain an `EXCLUSIVE` lock, of which there can only be one), which fails.
 
     This is a deadlock scenario.
@@ -105,3 +107,5 @@ with st.echo():
         st.write(conn.cursor().execute("SELECT * FROM users;").fetchall())
     except Exception as e:
         st.write("Read by `conn`:", e)
+
+st.page_link("pages/3_2_Threads,_Same_Connection.py", label="Next: 2 Threads, Same Connection", icon=":material/arrow_forward:")
