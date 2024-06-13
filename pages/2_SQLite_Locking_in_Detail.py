@@ -3,6 +3,9 @@ from streamlit.runtime.scriptrunner import add_script_run_ctx
 import sqlite3
 import threading
 import time
+import uuid
+
+db_name = str(uuid.uuid4())
 
 st.set_page_config(
     page_title="SQLite Locking in Detail",
@@ -31,12 +34,9 @@ def main():
     )
 
     with st.echo():
-        conn = sqlite3.connect("file:memdb2?mode=memory&cache=shared")
+        conn = sqlite3.connect(f"file:{db_name}?mode=memory&cache=shared")
         c = conn.cursor()
-        c.execute("DROP TABLE IF EXISTS users;")
-        c.execute(
-            "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT);"
-        )
+        c.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);")
         c.execute("INSERT INTO users (name) VALUES (?);", ("User 1",))
         conn.commit()
 
@@ -46,7 +46,7 @@ def main():
         """
         The database is currently in the `UNLOCKED` state.
 
-        We make a new connection `conn1` to the database. Then, we manually start a transaction with `BEGIN`. This ensures that read transaction does not end immediately after the `SELECT` statement.
+        We make a new connection `conn1` to the database. Then, we manually start a transaction with `BEGIN`. This ensures that read transaction does not end immediately after the `SELECT` statement (it only ends on the `commit()` call).
         
         We then perform a `SELECT`. This acquires a `SHARED` lock.
         """
@@ -54,11 +54,9 @@ def main():
 
     with st.echo():
         # Connect to the DB
-        conn1 = sqlite3.connect("file:memdb2?mode=memory&cache=shared")
+        conn1 = sqlite3.connect(f"file:{db_name}?mode=memory&cache=shared")
         cursor1 = conn1.cursor()
-
         cursor1.execute("BEGIN TRANSACTION;")
-
         cursor1.execute("SELECT * FROM users;")
         # SHARED lock acquired, and not released due to BEGIN TRANSACTION
 
