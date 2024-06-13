@@ -28,8 +28,6 @@ st.write(
     _Based on the [SQLite docs](https://sqlite.org/lockingv3.html)._
 
     First, we prepare an in-memory database using a connection `conn`:
-
-    _Code examples are executed on the backend._
     """
 )
 

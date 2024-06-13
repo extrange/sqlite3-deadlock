@@ -24,7 +24,16 @@ st.write(
     With Streamlit, the potential for deadlock arises, because of how Streamlit spawns separate threads for each page request, effectively resulting in `OperationalError: database is locked` errors.
 
     In the following pages, we will explore why this happens in detail, starting from how SQLite manages locking.
+
+    _Code examples are executed on the backend on demand, for example:_
     """
 )
+
+with st.echo():
+    import sqlite3
+    import time
+
+    sqlite3.sqlite_version
+    st.write(f"The time now is {time.ctime()}")
 
 st.page_link("pages/1_SQLite_Locking_in_Detail.py", label="Next: SQLite Locking in Detail", icon=":material/arrow_forward:")
