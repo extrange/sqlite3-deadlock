@@ -15,7 +15,9 @@ st.write(
 
     In this example, we get the error `cannot start a transaction within a transaction`.
 
-    This seems to suggest that in multithread use, statements from multiple threads are being interleaved.
+    This is because SQLite3 runs in **serialized** mode by default:
+
+    > In serialized mode, API calls to affect or use any SQLite database connection or any object derived from such a database connection can be made safely from multiple threads. **The effect on an individual object is the same as if the API calls had all been made in the same order from a single thread.** The name "serialized" arises from the fact that SQLite uses mutexes to serialize access to each object.
 
     Prepare the database:
     """

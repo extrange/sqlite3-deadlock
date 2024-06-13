@@ -44,8 +44,7 @@ def main():
             cursor = conn.cursor()
             cursor.execute("BEGIN TRANSACTION;")
             cursor.execute("SELECT * FROM users;")
-            # The connection is never committed
-            # As a result, the SHARED lock is never released
+            # The connection not committed until 10s later
 
             time.sleep(10)
             conn.commit()

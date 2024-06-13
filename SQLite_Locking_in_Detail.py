@@ -1,8 +1,5 @@
 import streamlit as st
-from streamlit.runtime.scriptrunner import add_script_run_ctx
 import sqlite3
-import threading
-import time
 import uuid
 
 db_name = str(uuid.uuid4())
@@ -64,7 +61,7 @@ def main():
 
     st.write(
         """
-        Next, we perform an `INSERT`. This releases the `SHARED` lock, but acquires a `RESERVED` lock, followed by a `PENDING` lock.
+        Next, we perform an `INSERT`. This  acquires a `RESERVED` lock, followed by a `PENDING` lock.
         """
     )
 
@@ -105,7 +102,7 @@ def main():
         conn1.commit()
         # An EXCLUSIVE lock was acquired
         # Journal is written to database
-        # EXCLUSIVE, PENDING and RESERVED locks are released
+        # All locks are released, and the database is now in the UNLOCKED state
 
         result = conn.cursor().execute("SELECT * FROM users;").fetchall()
         st.write(result)

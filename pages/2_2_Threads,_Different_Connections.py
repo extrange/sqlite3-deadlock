@@ -11,15 +11,15 @@ st.title("2 Threads Using Different Connections")
 
 st.write(
     """
-    In this example, we have 2 threads which both initiate a read transaction, obtaining `SHARED` locks on the database. Then, they both attempt to write, which will fail.
+    In this example, we have 2 threads which both initiate a read transaction, obtaining `SHARED` locks on the database. Then, they both attempt to write (obtain an `EXCLUSIVE` lock, of which there can only be one), which fails.
 
     This is a deadlock scenario.
 
     Interestingly, while we would expect that SQLite would attempt to retry via the [busy_handler](https://sqlite.org/c3ref/busy_timeout.html) (retrying for 5-30s), it fails almost instantly here. This is because SQLite [**cannot retry**](https://fractaledmind.github.io/2023/12/11/sqlite-on-rails-improving-concurrency/) in the middle of a transaction, as that would break [serializable isolation](https://en.wikipedia.org/wiki/Isolation_(database_systems)#Serializable) guarantees.
 
-    This resolves the deadlock scenario, and subsequent writes on the database are possible.
+    After the failure, despite both threads exiting, the database is still locked (because `commit()` was not called to end the transaction), and attempts to write will fail.
 
-    Prepare the database:
+    We first prepare the database with connection `conn`:
     """
 )
 
@@ -29,7 +29,9 @@ with st.echo():
     c.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);")
     conn.commit()
 
-st.write("Setup new connections `conn1` and `conn2` and threads 1 & 2, which will both obtain `SHARED` locks via `SELECT` and then attempt to write simultaneously:")
+st.write(
+    "Then, setup new connections `conn1` and `conn2` and threads 1 & 2, which will both obtain `SHARED` locks via `SELECT` and then attempt to write simultaneously:"
+)
 
 with st.echo():
 
@@ -58,13 +60,8 @@ with st.echo():
                 """INSERT INTO users (name) VALUES (?);""",
                 (f"From Thread {thread_num}",),
             )
-            conn.commit()
         except Exception as e:
             st.write(f"Exception on `INSERT` from thread {thread_num}", e)
-
-        finally:
-            # TODO without this, the database is locked on page refresh
-            conn.commit()
 
     thread1 = threading.Thread(target=attempt_read_then_write, args=[conn1, 1])
     thread2 = threading.Thread(target=attempt_read_then_write, args=[conn2, 2])
@@ -82,23 +79,29 @@ with st.echo():
     thread1.join()
     thread2.join()
 
-st.write("If we inspect the database, we see nothing has been written:")
+
+st.write(
+    """
+    At this point no thread can write to the database.
+
+    `conn1` and `conn2` have `SHARED` locks on the database, so they can still both read:
+    """
+)
 
 with st.echo():
 
-    result = conn1.cursor().execute("SELECT * FROM users;").fetchall()
-    st.write(result)
+    st.write("conn1", conn1.cursor().execute("SELECT * FROM users;").fetchall())
+    st.write("conn2", conn2.cursor().execute("SELECT * FROM users;").fetchall())
 
-st.write("Finally, we attempt to write to the DB again, using `conn1`, and succeed:")
+st.write(
+    """
+    In addition, since they also have `PENDING` locks, other connections (e.g. `conn`) cannot obtain a `SHARED` lock to read the database:
+    """
+)
 
 with st.echo():
 
     try:
-        conn1.cursor().execute("INSERT INTO users (name) VALUES (?);", ("write at the end",)) 
-        conn1.commit()
+        st.write(conn.cursor().execute("SELECT * FROM users;").fetchall())
     except Exception as e:
-        st.write(e)
-    finally:
-        conn1.commit()
-
-st.write(conn1.cursor().execute("SELECT * FROM users;").fetchall())
+        st.write("conn", e)
