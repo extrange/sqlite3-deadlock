@@ -1,0 +1,9 @@
+1. Prove that deadlock is actually happening - busy_timeout or something
+2. [DONE] Prove that a single thread with 2 interleaving transactions can block itself
+3. Prove that 2 threads with 2 different connections can deadlock
+4. Prove that 2 threads using the same connection (check_same_thread=False) can deadlock
+5. Does an exception leave the lock hanging forever? Otherwise why would the DB be locked for so long?
+6. Does WAL resolve the above issues?
+
+Recursive cursor
+connection as closure

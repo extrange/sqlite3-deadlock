@@ -1,5 +1,5 @@
 [server]
 enableCORS=true
 
-[general]
-email = ""
+# disable email prompt
+headless=true
