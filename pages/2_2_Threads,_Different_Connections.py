@@ -90,8 +90,8 @@ st.write(
 
 with st.echo():
 
-    st.write("conn1", conn1.cursor().execute("SELECT * FROM users;").fetchall())
-    st.write("conn2", conn2.cursor().execute("SELECT * FROM users;").fetchall())
+    st.write("Read by `conn1`:", conn1.cursor().execute("SELECT * FROM users;").fetchall())
+    st.write("Read by `conn2`:", conn2.cursor().execute("SELECT * FROM users;").fetchall())
 
 st.write(
     """
@@ -104,4 +104,4 @@ with st.echo():
     try:
         st.write(conn.cursor().execute("SELECT * FROM users;").fetchall())
     except Exception as e:
-        st.write("conn", e)
+        st.write("Read by `conn`:", e)

@@ -45,11 +45,11 @@ with st.echo():
             # Any locks obtained will be held until a commit()
             cursor.execute("BEGIN TRANSACTION;")
 
+            # Ensure that both threads reach here
+            time.sleep(1)
+
             # Obtain a SHARED lock
             cursor.execute("SELECT * FROM users;")
-
-            # Ensure that both threads reach here, before we attempt INSERT
-            time.sleep(1)
 
             cursor.execute(
                 """INSERT INTO users (name) VALUES (?);""",
