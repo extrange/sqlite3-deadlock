@@ -18,21 +18,11 @@ st.write(
     """
     [SQLite](https://www.sqlite.org/) is a common database for various applications, and is often used in conjunction with Streamlit.
 
-    However, as SQLite uses file-level locks instead of other concurrency mechanisms such as row level locking or [multi-version concurrency control](https://en.wikipedia.org/wiki/Multiversion_concurrency_control) (PostgreSQL), the following code example can be problematic:
+    However, as SQLite uses file-level locks instead of other concurrency mechanisms such as row level locking or [multi-version concurrency control](https://en.wikipedia.org/wiki/Multiversion_concurrency_control) (PostgreSQL), concurrent access can encounter locks, resulting in `OperationalError: database is locked` errors.
 
-    ```python
-    # page1.py
-    conn = sqlite3.connect("app.db")
-    # Rest of application code
+    This repository aims to explore why a particular Streamlit app using SQLite randomly encountered very prolonged `database is locked` errors, effectively preventing user access.
 
-    # page2.py
-    conn = sqlite3.connect("app.db")
-    # Rest of application code
-    ```
-
-    Because of how Streamlit sometimes different threads for page requests, concurrent database access is attempted at times, resulting in `OperationalError: database is locked` errors.
-
-    In the following pages, we will explore why this happens in detail, starting from how SQLite manages locking.
+    We will start by understanding SQLite locking in detail, followed by how Streamlit starts/reuses threads and `Connection`s. Finally, we explore hypotheses as to the prolonged database lock.
 
     _Note: Code examples are executed on the backend on demand, for example:_
     """
@@ -42,8 +32,8 @@ with st.echo():
     import sqlite3
     import time
 
-    sqlite3.sqlite_version
-    st.write(f"The time now is {time.ctime()}")
+    st.write(f"`{sqlite3.sqlite_version}`")
+    st.write(f"`The time now is {time.ctime()}`")
 
 st.page_link(
     "pages/1_SQLite_Locking_in_Detail.py",

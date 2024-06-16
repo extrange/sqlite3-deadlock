@@ -14,6 +14,8 @@ st.title("SQLite Locking in Detail")
 
 st.write(
     """
+    _Based on the official SQLite [documentation](https://www.sqlite.org/atomiccommit.html)._
+
     Locking is a mechanism to ensure consistency of operations, when multiple threads are involved, either reading, writing or both. It enables [**isolation**](https://en.wikipedia.org/wiki/Isolation_(database_systems)?oldformat=true#Isolation_levels), which is one of the ACID (Atomicity, Consistency, Isolation, Durability) properties.
 
     SQLite has several locks, which will be explored as we go through a transaction. We also discuss the various types of transactions.
@@ -51,14 +53,7 @@ st.write(
     """
     The database is now in the `UNLOCKED` state.
 
-    We make a new connection `conn1` to the database.
-    """
-)
-
-
-st.write(
-    """
-    We then perform a `SELECT`. This acquires a `SHARED` lock.
+    We make a new connection `conn1` to the database and perform a `SELECT`. This acquires a `SHARED` lock for the duration of the read.
     """
 )
 
@@ -72,7 +67,7 @@ st.write(conn.cursor().execute("SELECT * FROM users;").fetchall())
 
 st.write(
     f"""
-    _Note that we are not in a transaction yet:_
+    _Note that we are not in a transaction currently:_
     
     `{conn1.in_transaction=}`
     """
@@ -116,7 +111,7 @@ with st.expander(
         - `{conn.isolation_level=}` _blank string is the default for `DEFERRED`_
         - `{conn.autocommit=}` _if set to `-1` (`LEGACY_TRANSACTION_MODE`), the `isolation_level` setting will be respected_
         
-        Data modification statements such as `INSERT`, however, are not automatically committed, due to the Python `sqlite3` driver [issuing](https://docs.python.org/3.7/library/sqlite3.html#controlling-transactions) `BEGIN` commands before `INSERT/UPDATE/DELETE/REPLACE` statements, opening **explicit** transactions (from the point of view of the underlying `sqlite3` library), which need to be `COMMIT`-ed manually (e.g. with a `commit()` call in Python).
+        Data modification statements such as `INSERT`, however, are not automatically committed, due to the Python `sqlite3` driver [issuing](https://docs.python.org/3.7/library/sqlite3.html#controlling-transactions) `BEGIN` commands before `INSERT/UPDATE/DELETE/REPLACE` statements. These open **explicit** transactions (from the point of view of the underlying `sqlite3` library), which need to be `COMMIT`-ed manually (e.g. with a `commit()` call in Python).
 
         See [this Stackoverflow answer](https://stackoverflow.com/a/48391535) for more details.
 
@@ -139,7 +134,7 @@ with st.expander(
         f"""
         After `INSERT`: `{test_conn2.in_transaction=}`
 
-        _The transaction has been committed automatically, without an explicit `commit()` call._
+        _Note that the transaction has been committed automatically, without an explicit `commit()` call._
         """
     )
 
