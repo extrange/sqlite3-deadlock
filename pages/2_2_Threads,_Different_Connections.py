@@ -48,10 +48,6 @@ with st.echo():
 
         cursor = conn.cursor()
 
-        # Using BEGIN ensures that we retain a SHARED lock until a commit()
-        # Otherwise, the SHARED lock would be released after the SELECT
-        cursor.execute("BEGIN TRANSACTION;")
-
         cursor.execute("SELECT * FROM users;")
 
         # Ensure that both threads have obtained SHARED locks before the insert
@@ -92,8 +88,11 @@ st.write(
 
 with st.echo():
 
-    st.write("Read by `conn1`:", conn1.cursor().execute("SELECT * FROM users;").fetchall())
-    st.write("Read by `conn2`:", conn2.cursor().execute("SELECT * FROM users;").fetchall())
+    try:
+        st.write("Read by `conn1`:", conn1.cursor().execute("SELECT * FROM users;").fetchall())
+        st.write("Read by `conn2`:", conn2.cursor().execute("SELECT * FROM users;").fetchall())
+    except Exception as e:
+        st.write(e)
 
 st.write(
     """
@@ -104,6 +103,9 @@ st.write(
 with st.echo():
 
     try:
+        time.sleep(5)
+        st.write(thread1.is_alive())
+        st.write(thread2.is_alive())
         st.write(conn.cursor().execute("SELECT * FROM users;").fetchall())
     except Exception as e:
         st.write("Read by `conn`:", e)
