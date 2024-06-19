@@ -3,9 +3,8 @@ from streamlit.runtime.scriptrunner import add_script_run_ctx
 import sqlite3
 import threading
 import time
-import uuid
-
-db_name = str(uuid.uuid4())
+import tempfile
+import utils
 
 st.title("2 Threads Using the Same Connection")
 
@@ -25,59 +24,64 @@ st.write(
     """
 )
 
-with st.echo():
-    conn = sqlite3.connect(f"file:{db_name}?mode=memory&cache=shared")
-    c = conn.cursor()
-    c.execute("DROP TABLE IF EXISTS users;")
-    c.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);")
-    conn.commit()
+with tempfile.TemporaryDirectory() as d:
 
-st.write("Setup shared connection `shared_conn` and threads:")
+    db = utils.init_db(d)
 
-with st.echo():
+    with st.echo():
+        conn = sqlite3.connect(db)
 
-    # check_same_thread=False to allow multithread use
-    shared_conn = sqlite3.connect(f"file:{db_name}?mode=memory&cache=shared", check_same_thread=False)
+    st.write("Setup shared connection `shared_conn` and threads:")
 
-    def attempt_read_then_write(conn: sqlite3.Connection, thread_num: int):
+    with st.echo():
 
-        cursor = conn.cursor()
+        shared_conn = sqlite3.connect(db, check_same_thread=False)
 
-        try:
-            # Any locks obtained will be held until a commit()
-            cursor.execute("BEGIN TRANSACTION;")
+        def attempt_read_then_write(conn: sqlite3.Connection, thread_num: int):
 
-            # Ensure that both threads reach here
-            time.sleep(1)
+            try:
+                # Any locks obtained will be held until a commit()
+                conn.execute("BEGIN TRANSACTION;")
 
-            # Obtain a SHARED lock
-            cursor.execute("SELECT * FROM users;")
+                # Ensure that both threads reach here
+                time.sleep(1)
 
-            cursor.execute(
-                """INSERT INTO users (name) VALUES (?);""",
-                (f"From Thread {thread_num}",),
-            )
-            conn.commit()
-        except Exception as e:
-            st.write(f'Exception on `INSERT` from thread {thread_num}', e)
+                # Obtain a SHARED lock
+                conn.execute("SELECT * FROM users;")
 
-    thread1 = threading.Thread(target=attempt_read_then_write, args=[shared_conn, 1])
-    thread2 = threading.Thread(target=attempt_read_then_write, args=[shared_conn, 2])
+                conn.execute(
+                    """INSERT INTO users (name) VALUES (?);""",
+                    (f"From Thread {thread_num}",),
+                )
+                conn.commit()
+            except Exception as e:
+                st.write(f"Exception on `INSERT` from thread {thread_num}", e)
+
+        thread1 = threading.Thread(
+            target=attempt_read_then_write, args=[shared_conn, 1]
+        )
+        thread2 = threading.Thread(
+            target=attempt_read_then_write, args=[shared_conn, 2]
+        )
 
     # Streamlit-specific fix for displaying executed code (unrelated)
     add_script_run_ctx(thread1)
     add_script_run_ctx(thread2)
 
-st.write("As we expect, on running the code above we encounter an error:")
+    st.write("As we expect, on running the code above we encounter an error:")
 
-with st.echo():
+    with st.echo():
 
-    thread1.start()
-    thread2.start()
-    thread1.join()
-    thread2.join()
+        thread1.start()
+        thread2.start()
+        thread1.join()
+        thread2.join()
 
-    result = shared_conn.cursor().execute("SELECT * FROM users;").fetchall()
-    st.write(result)
+        result = shared_conn.cursor().execute("SELECT * FROM users;").fetchall()
+        st.write(result)
 
-st.page_link("pages/4_Shared _lock,_write_attempt.py", label="Next: Shared lock, write attempt", icon=":material/arrow_forward:")
+    st.page_link(
+        "pages/7_Misc:_Shared_Cache.py",
+        label="Next: Shared Cache",
+        icon=":material/arrow_forward:",
+    )

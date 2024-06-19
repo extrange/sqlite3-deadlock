@@ -22,8 +22,6 @@ st.write(
 
     This repository aims to explore why a particular Streamlit app using SQLite randomly encountered very prolonged `database is locked` errors, effectively preventing user access.
 
-    We will start by understanding SQLite locking in detail, followed by how Streamlit starts/reuses threads and `Connection`s. Finally, we explore hypotheses as to the prolonged database lock.
-
     _Note: Code examples are executed on the backend on demand, for example:_
     """
 )
@@ -36,7 +34,7 @@ with st.echo():
     st.write(f"`The time now is {time.ctime()}`")
 
 st.page_link(
-    "pages/1_SQLite_Locking_in_Detail.py",
+    "pages/1_The_App.py",
     label="Next: SQLite Locking in Detail",
     icon=":material/arrow_forward:",
 )
