@@ -28,7 +28,7 @@ st.write(
     conn.execute("some SQL statement")
     ```
 
-    A particular page:
+    A particular page, containing an upsert which ran upon each page request:
 
     ```python
     c = conn.cursor()

@@ -1,9 +1,10 @@
-# An attempt to get a connection to obtain a PENDING lock, but never drop it
+# Demo of 2 connections simultaneously INSERTing, until one fails and holds a reserved lock permanently, preventing subsequent writes
 import sqlite3
 import threading
 import uuid
 import time
 from multiprocessing import Process
+import traceback
 
 db = "file:app.db"
 
@@ -26,8 +27,7 @@ conn.commit()
 print("Database created.")
 
 def start_selects(thread_conn: sqlite3.Connection):
-    print('started spamming SELECTS')
-    thread_conn.execute("BEGIN") # Without this, the lockup doesn't happen.
+    print('started spamming INSERTS')
     while True:
         try:
             # thread_conn.execute(f"SELECT * FROM users WHERE name LIKE '{str(uuid.uuid4())[:7]}'").fetchall()
@@ -44,26 +44,13 @@ print("Started spamming INSERTS")
 while True:
     try:
         conn2.execute("INSERT INTO users (name) VALUES (?) ON CONFLICT DO UPDATE SET name=1", (str(uuid.uuid4()),))
-        conn2.commit() # This seems to acquire the PENDING lock, which would not otherwise be obtained in private cache mode (the default?)
+        # RESERVED lock is obtained
+        conn2.commit()
     except Exception as e:
         print("conn2 has locked the db:")
-        print(e)
+        print(traceback.format_exc())
         break
 
-# conn2 should have locked the database by now, but that doesn't happen
-try:
-    conn.execute("SELECT * FROM users;").fetchall()
-    print("conn: SELECT successful")
-except Exception as e:
-    print(e)
-
-# Even if conn1 commits() - no difference, it's still locked
-conn1.commit()
-
-try:
-    conn.execute("SELECT * FROM users;").fetchall()
-    print("conn: SELECT successful")
-except Exception as e:
-    print(e)
-
-process.join()
+# The database should be locked for writes by now
+# The below attempts to obtain a RESERVED lock and will fail
+conn.execute("INSERT INTO users (name) VALUES (?) ON CONFLICT DO UPDATE SET name=1", (str(uuid.uuid4()),))

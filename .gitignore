@@ -61,3 +61,4 @@ data/
 deployment/stg/keys
 ._.DS_Store*
 /*.csv
+*.db
