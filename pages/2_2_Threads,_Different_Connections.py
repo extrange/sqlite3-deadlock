@@ -157,6 +157,14 @@ with tempfile.TemporaryDirectory() as d:
     with st.echo():
         st.write(conn.execute("SELECT * FROM users;").fetchall())
 
+    st.write(
+        """
+        That being said, this is still not a likely explanation of what happened in the app, as without the explicit `thread_conn.execute("BEGIN")`, the `SHARED lock would only be obtained very briefly and released shortly thereafter. In testing with a large database and a slow query, `INSERT`s do not seem to block on `SELECT`s.
+
+        We consider a different possibility next - 2 threads using the same connection.
+        """
+    )
+
     st.page_link(
         "pages/3_2_Threads,_Same_Connection.py",
         label="Next: 2 Threads, Same Connection",
